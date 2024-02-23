@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Information Form</title>
+  <style>
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #090909;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4caf50;
+      color: #fff;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .success-message {
+      color: #4caf50;
+      font-size: 24px;
+      margin-top: 20px;
+    }
+    #route{
+      width: fit-content;
+      height: fit-content;
+      background-color:  #7B9E87;
+      margin-top: 100px;
+    }
+    span{
+      margin-left: 31%;
+    }
+    strong{
+      margin-left: 31%;
+    }
+    hr{
+      border: 1px solid grey;
+      width: 100%;
+    }
+    
+    #src_dest{
+      background-color: white;
+      width: 400px;
+      padding: 10px;
+    }
+    input{
+      width:280px;
+      display: block;
+    }
+
+  </style>
+  <!-- <script src="check.js"></script> -->
+</head>
+<body>
+ 
+    
+  <form id="userForm" onsubmit="submitForm(event)">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="mobile">Mobile Number:</label>
+    <input type="tel" id="mobile" name="mobile" pattern="[0-9]{10}" required>
+    <small>Enter a 10-digit mobile number</small>
+
+    <label for="address">Address:</label>
+    <textarea id="address" name="address" rows="4" required></textarea>
+
+    <label for="alternateMobile">Alternate Mobile Number:</label>
+    <input type="tel" id="alternateMobile" name="alternateMobile" pattern="[0-9]{10}">
+
+    <button type="submit">Place Order</button>
+  </form>
+  <!-- <button id="route_btn" >Calculate Route</button> -->
+  <div class="success-message" id="successMessage"></div>
+  <div class="success-message" id="success"></div>
+  <hr>
+  <hr>
+  <div id="src_dest">
+    <div class="a"><pre style="font-family:'Times New Roman', Times, serif">       Source : </pre><input type="text" id="Source" name="Source" style="border-radius: 3px;"></div>
+    <div class="a">Destination : <input type="text" id="Target" name="Target" style="border-radius: 3px;"></div>
+    <button  onclick="one()"> Submit  </button>
+  </div>
+    
+ 
+  <div id="route"></div>
+  <br>
+  <br>
+
+  <script>
+    //  document.getElementById("src_dest").style.setProperty("visiblitiy","hidden");
+
+function validateForm() {
+  var name = document.getElementById('name').value;
+  var mobile = document.getElementById('mobile').value;
+  var address = document.getElementById('address').value;
+
+  // Check if the required fields are filled
+  return !(name.trim() === '' || mobile.trim() === '' || address.trim() === '');
+}
+// document.getElementById("route_btn").addEventListener("click",function(){
+//   document.getElementById("src_dest").style.setProperty("visiblitiy","visible");
+// })
+
+
+//---------------------------------------------------------------------------------------------
+
+const ind = new Map([
+["New Delhi",0],
+["Bangalore", 1],
+["Kolkatta", 2],
+["Chennai", 3],
+["Hyderabad", 4],
+["Guwahati", 5],
+["Jammu", 6],
+["Trivandrum", 7],
+["Mumbai", 8],
+["Ahamadabad", 9]
+]);
+const india = new Map([
+[0,"New Delhi"],
+[1,"Bangalore"],
+[2,"Kolkatta"],
+[3,"Chennai"],
+[4,"Hyderabad"],
+[5,"Guwahati"],
+[6,"Jammu"],
+[7,"Trivandrum"],
+[8,"Mumbai"],
+[9,"Ahamadabad"]
+]);
+
+class Graph {
+  constructor(vertices) {
+    this.vertices = vertices;
+    this.adjMatrix = [];
+    for (let i = 0; i < vertices; i++) {
+      this.adjMatrix[i] = [];
+      for (let j = 0; j < vertices; j++) {
+        this.adjMatrix[i][j] = 0;
+      }
+    }
+  }
+
+  addEdge(source, destination, weight) {
+    this.adjMatrix[source][destination] = weight;
+    this.adjMatrix[destination][source] = weight;
+  }
+
+  dijkstra(src, dest) {
+    const distance = new Array(this.vertices);
+    const visited = new Array(this.vertices);
+    const previous = new Array(this.vertices);
+
+    for (let i = 0; i < this.vertices; i++) {
+      distance[i] = Infinity;
+      visited[i] = false;
+      previous[i] = -1;
+    }
+
+    distance[src] = 0;
+
+    for (let count = 0; count < this.vertices - 1; count++) {
+      const u = this.minDistance(distance, visited);
+      visited[u] = true;
+
+      for (let v = 0; v < this.vertices; v++) {
+        if (!visited[v] && this.adjMatrix[u][v] !== 0 &&
+          distance[u] + this.adjMatrix[u][v] < distance[v]) {
+          distance[v] = distance[u] + this.adjMatrix[u][v];
+          previous[v] = u;
+        }
+      }
+    }
+
+    return this.constructPath(previous, src, dest);
+  }
+
+  minDistance(distance, visited) {
+    let min = Infinity;
+    let minIndex = -1;
+
+    for (let v = 0; v < this.vertices; v++) {
+      if (visited[v] === false && distance[v] <= min) {
+        min = distance[v];
+        minIndex = v;
+      }
+    }
+
+    return minIndex;
+  }
+
+  constructPath(previous, src, dest) {
+    const path = [];
+    let current = dest;
+
+    while (current !== -1) {
+      path.unshift(current);
+      current = previous[current];
+    }
+
+    return path;
+  }
+}
+
+// Example Usage
+
+
+const weightedMatrix = [
+  [0, 1950, 1350, Infinity, 1350, 1450, 500, Infinity, 1250, 775],
+  [1950, 0, 1600, 285, 500, Infinity, Infinity, 500, 840, Infinity],
+  [1350, 1600, 0, 1360, 1180, 520, Infinity, Infinity, 1800, 1770],
+  [Infinity, 285, 1360, 0, 570, Infinity, Infinity, 620, Infinity, Infinity],
+  [1350, 500, 1180, 570, 0, Infinity, Infinity, Infinity, 670, 1020],
+  [1450, Infinity, 520, Infinity, Infinity, 0, 1780, Infinity, Infinity, Infinity],
+  [500, Infinity, Infinity, Infinity, Infinity, 1780, 0, Infinity, Infinity, Infinity],
+  [Infinity, 500, Infinity, 620, Infinity, Infinity, Infinity, 0, 1250, Infinity],
+  [1250, 840, 1800, Infinity, 670, Infinity, Infinity, 1250, 0, 440],
+  [775, Infinity, 1770, Infinity, 1020, Infinity, Infinity, Infinity, 440, 0]
+];
+const graph = new Graph(10);
+
+for (let i = 0; i < 10; i++) {
+  for (let j = 0; j < 10; j++) {
+    if (weightedMatrix[i][j] !== Infinity) {
+      graph.addEdge(i, j, weightedMatrix[i][j]);
+    }
+  }
+}
+
+function one(){
+    console.log("called");
+  const source = document.getElementById("Source").value;
+  const destination =document.getElementById("Target").value;
+
+  const shortestPath = graph.dijkstra(source, destination);
+
+  let x=`     Shortest path from ${india.get(source)} to ${destination} is :\n `;
+  let y=[];
+  let n=shortestPath.length;
+  x+=`<br>      <strong>${shortestPath[0]}</strong>`;
+  y='\\/'
+  for(let i=1;i<n;i++){
+    x+= `<br><span>|</span> <br><span>|</span><br> <strong>${shortestPath[i]}</strong>`;
+  }
+  //console.log(shortestPath);
+  document.getElementById("route").innerHTML=`${x}`;
+}
+
+//   const source = document.getElementById("Source").value;
+//   const destination = document.getElementById("Target").value;
+
+//   const shortestPath = graph.dijkstra(source, destination);
+
+//   console.log(`Shortest path from ${source} to ${destination}: ${shortestPath.join(' -> ')}`);
+
+//---------------------------------------------------------------------------------------------
+    function submitForm(event) {
+      event.preventDefault(); 
+      if (validateForm()) { 
+        var name = document.getElementById('name').value;
+        var mobile = document.getElementById('mobile').value;
+        var address = document.getElementById('address').value;
+        var alternateMobile = document.getElementById('alternateMobile').value;
+
+        var successMessage = document.getElementById('successMessage');
+        successMessage.innerText = '🎉 Your order is placed!';
+        successMessage.style.display = 'block';
+
+        var orderDetails = "Name: " + name + "<br>";
+        orderDetails += "Mobile Number: " + mobile + "<br>";
+        orderDetails += "Address: " + address + "<br>";
+        orderDetails += "Alternate Mobile Number: " + alternateMobile;
+        var success = document.getElementById('success');
+        success.innerHTML += '<div>' + orderDetails + '</div>';
+
+        successMessage.scrollIntoView({ behavior: 'smooth' });
+        
+
+      } else {
+        alert("Please fill in all the required fields.");
+      }
+    }
+   
+
+  </script>
+
+</body>
+</html>
